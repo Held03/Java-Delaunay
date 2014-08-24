@@ -26,7 +26,7 @@ public abstract class VoronoiGraph {
     final public ArrayList<Corner> corners = new ArrayList();
     final public ArrayList<Center> centers = new ArrayList();
     final public Rectangle bounds;
-    final private Random r;
+    final protected Random r;
     public BufferedImage img;
     protected Color OCEAN, RIVER, LAKE, BEACH;
 
@@ -79,7 +79,7 @@ public abstract class VoronoiGraph {
         return centers.get(img.getRGB(x, y) & 0xffffff);
     }
 
-    private void improveCorners() {
+    protected void improveCorners() {
         Point[] newP = new Point[corners.size()];
         for (Corner c : corners) {
             if (c.border) {
@@ -104,7 +104,7 @@ public abstract class VoronoiGraph {
         }
     }
 
-    private Edge edgeWithCenters(Center c1, Center c2) {
+    protected Edge edgeWithCenters(Center c1, Center c2) {
         for (Edge e : c1.borders) {
             if (e.d0 == c2 || e.d1 == c2) {
                 return e;
@@ -113,7 +113,7 @@ public abstract class VoronoiGraph {
         return null;
     }
 
-    private void drawTriangle(Graphics2D g, Corner c1, Corner c2, Center center) {
+    protected void drawTriangle(Graphics2D g, Corner c1, Corner c2, Center center) {
         int[] x = new int[3];
         int[] y = new int[3];
         x[0] = (int) center.loc.x;
@@ -125,7 +125,7 @@ public abstract class VoronoiGraph {
         g.fillPolygon(x, y, 3);
     }
 
-    private boolean closeEnough(double d1, double d2, double diff) {
+    protected boolean closeEnough(double d1, double d2, double diff) {
         return Math.abs(d1 - d2) <= diff;
     }
 
@@ -244,7 +244,7 @@ public abstract class VoronoiGraph {
         g.drawRect((int) bounds.x, (int) bounds.y, (int) bounds.width, (int) bounds.height);
     }
 
-    private void buildGraph(Voronoi v) {
+    protected void buildGraph(Voronoi v) {
         final HashMap<Point, Center> pointCenterMap = new HashMap();
         final ArrayList<Point> points = v.siteCoords();
         for (Point p : points) {
@@ -326,20 +326,20 @@ public abstract class VoronoiGraph {
 
     // Helper functions for the following for loop; ideally these
     // would be inlined
-    private void addToCornerList(ArrayList<Corner> list, Corner c) {
+    protected void addToCornerList(ArrayList<Corner> list, Corner c) {
         if (c != null && !list.contains(c)) {
             list.add(c);
         }
     }
 
-    private void addToCenterList(ArrayList<Center> list, Center c) {
+    protected void addToCenterList(ArrayList<Center> list, Center c) {
         if (c != null && !list.contains(c)) {
             list.add(c);
         }
     }
 
     //ensures that each corner is represented by only one corner object
-    private Corner makeCorner(HashMap<Integer, Corner> pointCornerMap, Point p) {
+    protected Corner makeCorner(HashMap<Integer, Corner> pointCornerMap, Point p) {
         if (p == null) {
             return null;
         }
@@ -356,7 +356,7 @@ public abstract class VoronoiGraph {
         return c;
     }
 
-    private void assignCornerElevations() {
+    protected void assignCornerElevations() {
         LinkedList<Corner> queue = new LinkedList();
         for (Corner c : corners) {
             c.water = isWater(c.loc);
@@ -391,7 +391,7 @@ public abstract class VoronoiGraph {
 
     //only the radial implementation of amitp's map generation
     //TODO implement more island shapes
-    private boolean isWater(Point p) {
+    protected boolean isWater(Point p) {
         p = new Point(2 * (p.x / bounds.width - 0.5), 2 * (p.y / bounds.height - 0.5));
 
         double angle = Math.atan2(p.y, p.x);
@@ -421,7 +421,7 @@ public abstract class VoronoiGraph {
          return !(body && !eye1 && !eye2);*/
     }
 
-    private void assignOceanCoastAndLand() {
+    protected void assignOceanCoastAndLand() {
         LinkedList<Center> queue = new LinkedList();
         final double waterThreshold = .3;
         for (final Center center : centers) {
@@ -469,7 +469,7 @@ public abstract class VoronoiGraph {
         }
     }
 
-    private ArrayList<Corner> landCorners() {
+    protected ArrayList<Corner> landCorners() {
         final ArrayList<Corner> list = new ArrayList();
         for (Corner c : corners) {
             if (!c.ocean && !c.coast) {
@@ -479,7 +479,7 @@ public abstract class VoronoiGraph {
         return list;
     }
 
-    private void redistributeElevations(ArrayList<Corner> landCorners) {
+    protected void redistributeElevations(ArrayList<Corner> landCorners) {
         Collections.sort(landCorners, new Comparator<Corner>() {
             @Override
             public int compare(Corner o1, Corner o2) {
@@ -507,7 +507,7 @@ public abstract class VoronoiGraph {
         }
     }
 
-    private void assignPolygonElevations() {
+    protected void assignPolygonElevations() {
         for (Center center : centers) {
             double total = 0;
             for (Corner c : center.corners) {
@@ -517,7 +517,7 @@ public abstract class VoronoiGraph {
         }
     }
 
-    private void calculateDownslopes() {
+    protected void calculateDownslopes() {
         for (Corner c : corners) {
             Corner down = c;
             //System.out.println("ME: " + c.elevation);
@@ -531,7 +531,7 @@ public abstract class VoronoiGraph {
         }
     }
 
-    private void createRivers() {
+    protected void createRivers() {
         for (int i = 0; i < bounds.width / 2; i++) {
             Corner c = corners.get(r.nextInt(corners.size()));
             if (c.ocean || c.elevation < 0.3 || c.elevation > 0.9) {
@@ -553,7 +553,7 @@ public abstract class VoronoiGraph {
         }
     }
 
-    private Edge lookupEdgeFromCorner(Corner c, Corner downslope) {
+    protected Edge lookupEdgeFromCorner(Corner c, Corner downslope) {
         for (Edge e : c.protrudes) {
             if (e.v0 == downslope || e.v1 == downslope) {
                 return e;
@@ -562,7 +562,7 @@ public abstract class VoronoiGraph {
         return null;
     }
 
-    private void assignCornerMoisture() {
+    protected void assignCornerMoisture() {
         LinkedList<Corner> queue = new LinkedList();
         for (Corner c : corners) {
             if ((c.water || c.river > 0) && !c.ocean) {
@@ -592,7 +592,7 @@ public abstract class VoronoiGraph {
         }
     }
 
-    private void redistributeMoisture(ArrayList<Corner> landCorners) {
+    protected void redistributeMoisture(ArrayList<Corner> landCorners) {
         Collections.sort(landCorners, new Comparator<Corner>() {
             @Override
             public int compare(Corner o1, Corner o2) {
@@ -609,7 +609,7 @@ public abstract class VoronoiGraph {
         }
     }
 
-    private void assignPolygonMoisture() {
+    protected void assignPolygonMoisture() {
         for (Center center : centers) {
             double total = 0;
             for (Corner c : center.corners) {
@@ -619,7 +619,7 @@ public abstract class VoronoiGraph {
         }
     }
 
-    private void assignBiomes() {
+    protected void assignBiomes() {
         for (Center center : centers) {
             center.biome = getBiome(center);
         }
